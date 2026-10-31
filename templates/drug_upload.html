@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+{% block title %}Select Medication — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <h1 class="section-title animate-in"><i class="bi bi-capsule me-2"></i>Select Medication</h1>
+            <p class="section-subtitle animate-in">Choose a drug from the catalog or scan a drug label image.</p>
+            
+            <!-- Step Progress Indicator -->
+            <div class="step-progress animate-in">
+                <div class="step-item">
+                    <div class="step-circle completed"><i class="bi bi-check-lg"></i></div>
+                    <span class="step-label completed">Patient Details</span>
+                </div>
+                <div class="step-connector done"></div>
+                <div class="step-item">
+                    <div class="step-circle active">2</div>
+                    <span class="step-label active">Drug Selection</span>
+                </div>
+                <div class="step-connector pending"></div>
+                <div class="step-item">
+                    <div class="step-circle upcoming">3</div>
+                    <span class="step-label">Risk Report</span>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <!-- Drug Selection Form -->
+                <div class="col-lg-7">
+                    <div class="card-glass p-4 animate-in">
+                        <h5 class="fw-bold mb-3" style="color: var(--pr-primary-light);"><i class="bi bi-search me-2"></i>Select from Catalog</h5>
+                        <form method="POST" action="{{ url_for('drug_upload') }}">
+                            <div class="mb-3">
+                                <label class="form-label d-flex justify-content-between">
+                                    <span>Drug Name</span>
+                                    <span class="badge" style="background: var(--pr-bg-elevated); color: var(--pr-secondary);">{{ drugs|length }} available</span>
+                                </label>
+                                <div class="input-group input-group-sm mb-2">
+                                    <span class="input-group-text bg-dark border-secondary"><i class="bi bi-search text-muted"></i></span>
+                                    <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" id="drugSearchInput" placeholder="Quick search by drug or generic name (e.g. Amoxicillin, Metformin, Azithral)..." autocomplete="off">
+                                </div>
+                                <select class="form-select" name="drug_id" id="drugSelect" required>
+                                    <option value="">— Select a drug from catalog —</option>
+                                    {% for drug in drugs %}
+                                    <option value="{{ drug['id'] }}">{{ drug['drug_name'] }} ({{ drug['generic_name'] }}) — {{ drug['category'] }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text small text-muted" id="drugMatchHint">Type above to instantly filter through all medications.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Dosage Category</label>
+                                <select class="form-select" name="dosage_category">
+                                    <option value="Low">Low Dose</option>
+                                    <option value="Standard" selected>Standard Dose</option>
+                                    <option value="High">High Dose</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary-gradient w-100">
+                                <i class="bi bi-shield-check me-2"></i>Evaluate Side Effect Risk
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- OCR Scanner -->
+                <div class="col-lg-5">
+                    <div class="card-glass p-4 animate-in" style="animation-delay: 0.1s;">
+                        <h5 class="fw-bold mb-2" style="color: var(--pr-secondary);"><i class="bi bi-camera me-2"></i>OCR Drug Scanner</h5>
+                        <p class="text-muted small mb-2">Upload a photo of medicine packaging or label to automatically identify the drug.</p>
+                        
+                        <div class="alert p-2 small mb-3" style="background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.25); border-radius: 8px; color: #94a3b8; font-size: 0.78rem;">
+                            <i class="bi bi-lightbulb text-warning me-1"></i><strong>Tip:</strong> Ensure the drug name or salt is clearly readable. If OCR is not configured on the server, you can always pick the drug directly from the catalog.
+                        </div>
+
+                        <form id="ocrForm" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <input type="file" class="form-control" name="image" id="ocrImageInput" accept="image/*">
+                            </div>
+                            <div id="imagePreviewContainer" class="mb-3 text-center" style="display: none;">
+                                <img id="imagePreview" src="" alt="Selected drug label" style="max-height: 140px; border-radius: 8px; border: 1px solid var(--pr-border);">
+                            </div>
+                            <button type="submit" class="btn btn-outline-glass w-100" id="ocrBtn">
+                                <i class="bi bi-upc-scan me-2"></i>Scan Image
+                            </button>
+                        </form>
+                        <div id="ocrResult" class="mt-3" style="display: none;">
+                            <div class="p-3" style="background: var(--pr-bg-elevated); border-radius: 10px;">
+                                <div id="ocrMessage" class="small mb-2"></div>
+                                <div id="ocrText" class="small text-muted" style="max-height: 120px; overflow-y: auto;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Patient Summary -->
+                    {% if patient %}
+                    <div class="card-glass p-4 mt-4 animate-in" style="animation-delay: 0.2s;">
+                        <h6 class="fw-bold mb-2" style="color: var(--pr-primary-light);"><i class="bi bi-person-check me-2"></i>Patient Summary</h6>
+                        <div class="small text-muted">
+                            <div><strong>Age:</strong> {{ patient.age }} | <strong>Gender:</strong> {{ patient.gender }} | <strong>Weight:</strong> {{ patient.weight }} kg</div>
+                            <div><strong>Condition:</strong> {{ patient.medical_condition }}</div>
+                            <div><strong>BP:</strong> {{ patient.systolic_bp }}/{{ patient.diastolic_bp }} mmHg</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Live Search Filter for Drug Select Dropdown
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('drugSearchInput');
+    const select = document.getElementById('drugSelect');
+    const hint = document.getElementById('drugMatchHint');
+    if (!searchInput || !select) return;
+
+    // Cache original options list
+    const originalOptions = Array.from(select.options);
+    const totalCount = originalOptions.length - 1; // excluding default placeholder
+
+    let debounceTimer = null;
+    searchInput.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            const query = this.value.toLowerCase().trim();
+            const currentSelected = select.value;
+            select.innerHTML = '';
+
+            let matchCount = 0;
+            const maxDisplay = 200; // Keep DOM super fast if broad match
+
+            originalOptions.forEach(opt => {
+                if (opt.value === "") {
+                    select.appendChild(opt.cloneNode(true));
+                    return;
+                }
+                const text = opt.text.toLowerCase();
+                const isSelected = (opt.value === currentSelected);
+
+                if (!query) {
+                    if (matchCount < maxDisplay || isSelected) {
+                        select.appendChild(opt.cloneNode(true));
+                        matchCount++;
+                    }
+                } else if (text.includes(query) || isSelected) {
+                    select.appendChild(opt.cloneNode(true));
+                    matchCount++;
+                }
+            });
+
+            select.value = currentSelected;
+
+            if (hint) {
+                if (!query) {
+                    hint.textContent = `Showing first ${Math.min(matchCount, maxDisplay)} of ${totalCount} medications. Type to filter.`;
+                } else {
+                    hint.textContent = `Found ${matchCount} medication(s) matching "${query}".`;
+                }
+            }
+        }, 120);
+    });
+
+    // Image Preview Handler
+    const imageInput = document.getElementById('ocrImageInput');
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    const imagePreview = document.getElementById('imagePreview');
+
+    if (imageInput && previewContainer && imagePreview) {
+        imageInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        });
+    }
+
+    // Initial limit to prevent huge initial DOM paint lag
+    searchInput.dispatchEvent(new Event('input'));
+});
+
+// OCR Scanner Submission
+document.getElementById('ocrForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('ocrBtn');
+    const resultDiv = document.getElementById('ocrResult');
+    const msgDiv = document.getElementById('ocrMessage');
+    const textDiv = document.getElementById('ocrText');
+    const fileInput = document.getElementById('ocrImageInput');
+    
+    if (!fileInput.files.length) {
+        resultDiv.style.display = 'block';
+        msgDiv.innerHTML = `<span class="text-warning"><i class="bi bi-exclamation-circle me-1"></i>Please choose an image file first.</span>`;
+        textDiv.innerHTML = '';
+        return;
+    }
+
+    const formData = new FormData(this);
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Scanning...';
+    
+    try {
+        const resp = await fetch('/api/ocr-scan', { method: 'POST', body: formData });
+        const data = await resp.json();
+        
+        resultDiv.style.display = 'block';
+        
+        if (data.success && data.identified) {
+            msgDiv.innerHTML = `<span class="text-success"><i class="bi bi-check-circle me-1"></i>${data.message}</span>`;
+            // Auto-select the matched drug
+            const select = document.getElementById('drugSelect');
+            const searchInput = document.getElementById('drugSearchInput');
+            if (searchInput) searchInput.value = data.matched_drug.drug_name;
+            
+            // Re-render select with matched option
+            const opt = new Option(`${data.matched_drug.drug_name} (${data.matched_drug.generic_name}) — ${data.matched_drug.category}`, data.matched_drug.id, true, true);
+            select.add(opt, undefined);
+            select.value = data.matched_drug.id;
+        } else if (data.success) {
+            msgDiv.innerHTML = `<span class="text-warning"><i class="bi bi-exclamation-circle me-1"></i>${data.message}</span><div class="mt-2 text-muted" style="font-size: 0.8rem;">You can quickly pick your medication from the catalog dropdown on the left.</div>`;
+        } else {
+            msgDiv.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle me-1"></i>${data.error}</span>`;
+        }
+        
+        if (data.extracted_text) {
+            textDiv.innerHTML = `<strong>Extracted Text:</strong><br>${data.extracted_text}`;
+        } else {
+            textDiv.innerHTML = '';
+        }
+    } catch (err) {
+        resultDiv.style.display = 'block';
+        msgDiv.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle me-1"></i>Request failed: ${err.message}</span>`;
+        textDiv.innerHTML = '';
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-upc-scan me-2"></i>Scan Image';
+    }
+});
+</script>
+{% endblock %}

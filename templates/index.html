@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}{{ app_name }} — Drug Side Effect Prediction{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    
+    <!-- Hero Section -->
+    <div class="text-center mb-5 animate-in">
+        <div class="mb-3">
+            <span style="font-size: 3.5rem;"><i class="bi bi-capsule" style="background: linear-gradient(135deg, var(--pr-primary), var(--pr-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i></span>
+        </div>
+        <h1 class="section-title" style="font-size: 2.8rem;">
+            <span style="background: linear-gradient(135deg, var(--pr-primary), var(--pr-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">PharmacoRisk AI</span>
+        </h1>
+        <p class="section-subtitle" style="max-width: 640px; margin: 0 auto;">
+            Personalized Drug Side Effect & Clinical Safety Assessment System.
+            Enter patient clinical parameters and receive real-time adverse reaction evaluations.
+        </p>
+        <div class="d-flex justify-content-center gap-3 mt-3 flex-wrap">
+            <a href="{{ url_for('patient') }}" class="btn btn-primary-gradient btn-lg px-4">
+                <i class="bi bi-play-circle me-2"></i>Start Assessment
+            </a>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-glass btn-lg px-4">
+                <i class="bi bi-shield-lock me-2"></i>Admin Console
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="card-glass stat-card animate-in">
+                <div class="stat-value">{{ stats.total_drugs }}</div>
+                <div class="stat-label">Drug Profiles</div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card-glass stat-card animate-in" style="animation-delay: 0.1s;">
+                <div class="stat-value">{{ stats.total_predictions }}</div>
+                <div class="stat-label">Assessments Conducted</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How It Works -->
+    <div class="mb-5">
+        <h2 class="section-title text-center"><i class="bi bi-diagram-3 me-2"></i>How It Works</h2>
+        <p class="section-subtitle text-center">Three simple steps to evaluate medication safety</p>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card-glass p-4 text-center h-100">
+                    <div class="mb-3"><i class="bi bi-person-vcard" style="font-size: 2.5rem; color: var(--pr-primary);"></i></div>
+                    <h5 class="fw-bold">1. Patient Details</h5>
+                    <p class="text-muted small">Enter age, weight, medical conditions, allergies, vitals, and lab values.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card-glass p-4 text-center h-100">
+                    <div class="mb-3"><i class="bi bi-capsule" style="font-size: 2.5rem; color: var(--pr-secondary);"></i></div>
+                    <h5 class="fw-bold">2. Select Medication</h5>
+                    <p class="text-muted small">Choose a drug from the catalog or scan a label with OCR image recognition.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card-glass p-4 text-center h-100">
+                    <div class="mb-3"><i class="bi bi-graph-up-arrow" style="font-size: 2.5rem; color: var(--pr-accent);"></i></div>
+                    <h5 class="fw-bold">3. Clinical Risk Report</h5>
+                    <p class="text-muted small">Receive risk evaluation, probability distributions, and clinical contributing factors.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Drug Directory -->
+    <div class="mb-5" id="drug-directory">
+        <h2 class="section-title"><i class="bi bi-collection me-2"></i>Drug Directory</h2>
+        <p class="section-subtitle">Browse educational pharmacological profiles</p>
+        <div class="row g-3">
+            {% for drug in recent_drugs %}
+            <div class="col-md-6 col-lg-3">
+                <a href="{{ url_for('drug_info', drug_id=drug['id']) }}" class="text-decoration-none">
+                    <div class="card-glass p-3 h-100">
+                        <h6 class="fw-bold mb-1" style="color: var(--pr-primary-light);">{{ drug['drug_name'] }}</h6>
+                        <small class="text-muted d-block mb-2">{{ drug['generic_name'] }}</small>
+                        <span class="badge" style="background: var(--pr-bg-elevated); color: var(--pr-secondary); font-size: 0.7rem;">{{ drug['category'] }}</span>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

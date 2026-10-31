@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Admin Authentication — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card-glass p-4 p-md-5 animate-in">
+                
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex p-3 rounded-circle mb-3" style="background: rgba(14, 165, 233, 0.12); border: 1px solid var(--pr-border);">
+                        <i class="bi bi-shield-lock" style="font-size: 2.2rem; color: var(--pr-primary-light);"></i>
+                    </div>
+                    <h2 class="h4 fw-bold mb-1" style="letter-spacing: -0.3px;">Administrator Access</h2>
+                    <p class="text-muted small">Sign in to manage drug catalog inventory and inspect surveillance graphs.</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('admin_login', next=request.args.get('next')) }}" id="adminLoginForm">
+                    <div class="mb-3">
+                        <label class="form-label" for="adminUsername"><i class="bi bi-person me-1"></i>Admin Username</label>
+                        <input type="text" class="form-control" id="adminUsername" name="username" placeholder="admin" required autofocus autocomplete="username">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label" for="adminPassword"><i class="bi bi-key me-1"></i>Password</label>
+                        <input type="password" class="form-control" id="adminPassword" name="password" placeholder="••••••••" required autocomplete="current-password">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary-gradient w-100 mb-3 py-2 fw-semibold">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Sign In to Admin Dashboard
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-glass w-100 mb-3 py-2 small" id="quickDemoBtn">
+                        <i class="bi bi-lightning-charge me-1" style="color: var(--pr-warning);"></i>Quick Fill Demo Credentials (admin / admin123)
+                    </button>
+                </form>
+
+                <div class="p-3 rounded mt-3" style="background: rgba(14, 165, 233, 0.05); border: 1px dashed var(--pr-border);">
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-info-circle text-info me-2 mt-1"></i>
+                        <small class="text-muted">
+                            Authorized clinical administrators have permission to insert, catalog, and query medication monographs and pharmacological telemetry.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('index') }}" class="text-muted small text-decoration-none">
+                        <i class="bi bi-arrow-left me-1"></i>Return to Public Portal
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.getElementById('quickDemoBtn')?.addEventListener('click', function() {
+    document.getElementById('adminUsername').value = 'admin';
+    document.getElementById('adminPassword').value = 'admin123';
+    document.getElementById('adminLoginForm').submit();
+});
+</script>
+{% endblock %}

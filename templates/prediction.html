@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}Prediction Result — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <h1 class="section-title animate-in"><i class="bi bi-graph-up-arrow me-2"></i>Risk Prediction Result</h1>
+            <p class="section-subtitle animate-in">Personalized adverse drug reaction risk assessment for <strong>{{ prediction['drug_name'] }}</strong></p>
+            
+            <!-- Step Progress Indicator -->
+            <div class="step-progress animate-in">
+                <div class="step-item">
+                    <div class="step-circle completed"><i class="bi bi-check-lg"></i></div>
+                    <span class="step-label completed">Patient Details</span>
+                </div>
+                <div class="step-connector done"></div>
+                <div class="step-item">
+                    <div class="step-circle completed"><i class="bi bi-check-lg"></i></div>
+                    <span class="step-label completed">Drug Selection</span>
+                </div>
+                <div class="step-connector done"></div>
+                <div class="step-item">
+                    <div class="step-circle completed" style="background: linear-gradient(135deg, var(--pr-primary), var(--pr-secondary));">3</div>
+                    <span class="step-label completed" style="color: var(--pr-primary-light);">Risk Report</span>
+                </div>
+            </div>
+            
+            <!-- Risk Summary Card -->
+            <div class="card-glass p-4 mb-4 animate-in">
+                <div class="row align-items-center">
+                    <div class="col-md-4 text-center">
+                        <div class="mb-2">
+                            <span class="risk-badge risk-{{ prediction['predicted_risk']|lower }}" style="font-size: 1.5rem; padding: 0.8rem 2rem;">
+                                {% if prediction['predicted_risk'] == 'High' %}
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                {% elif prediction['predicted_risk'] == 'Moderate' %}
+                                <i class="bi bi-exclamation-circle me-2"></i>
+                                {% else %}
+                                <i class="bi bi-check-circle me-2"></i>
+                                {% endif %}
+                                {{ prediction['predicted_risk'] }} Risk
+                            </span>
+                        </div>
+                        <small class="text-muted">Predicted Side Effect Risk Level</small>
+                    </div>
+                    <div class="col-md-8">
+                        <h6 class="fw-bold mb-3" style="color: var(--pr-primary-light);">Probability Distribution</h6>
+                        <!-- Low -->
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span><i class="bi bi-circle-fill me-1" style="color: var(--pr-success);"></i>Low Risk</span>
+                                <span>{{ (prediction['prob_low'] * 100)|round(1) }}%</span>
+                            </div>
+                            <div class="progress" style="height: 8px; background: var(--pr-bg-elevated); border-radius: 4px;">
+                                <div class="progress-bar" style="width: {{ prediction['prob_low'] * 100 }}%; background: var(--pr-success); border-radius: 4px;"></div>
+                            </div>
+                        </div>
+                        <!-- Moderate -->
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span><i class="bi bi-circle-fill me-1" style="color: var(--pr-warning);"></i>Moderate Risk</span>
+                                <span>{{ (prediction['prob_moderate'] * 100)|round(1) }}%</span>
+                            </div>
+                            <div class="progress" style="height: 8px; background: var(--pr-bg-elevated); border-radius: 4px;">
+                                <div class="progress-bar" style="width: {{ prediction['prob_moderate'] * 100 }}%; background: var(--pr-warning); border-radius: 4px;"></div>
+                            </div>
+                        </div>
+                        <!-- High -->
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span><i class="bi bi-circle-fill me-1" style="color: var(--pr-danger);"></i>High Risk</span>
+                                <span>{{ (prediction['prob_high'] * 100)|round(1) }}%</span>
+                            </div>
+                            <div class="progress" style="height: 8px; background: var(--pr-bg-elevated); border-radius: 4px;">
+                                <div class="progress-bar" style="width: {{ prediction['prob_high'] * 100 }}%; background: var(--pr-danger); border-radius: 4px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <!-- Contributing Factors -->
+                <div class="col-md-6">
+                    <div class="card-glass p-4 h-100 animate-in" style="animation-delay: 0.1s;">
+                        <h5 class="fw-bold mb-3" style="color: var(--pr-accent);"><i class="bi bi-exclamation-diamond me-2"></i>Contributing Risk Factors</h5>
+                        <ul class="list-unstyled mb-0">
+                            {% for factor in factors %}
+                            <li class="mb-2 small">
+                                <i class="bi bi-arrow-right-short me-1" style="color: var(--pr-primary-light);"></i>
+                                {{ factor }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Patient Summary -->
+                <div class="col-md-6">
+                    <div class="card-glass p-4 h-100 animate-in" style="animation-delay: 0.15s;">
+                        <h5 class="fw-bold mb-3" style="color: var(--pr-primary-light);"><i class="bi bi-person-vcard me-2"></i>Patient Profile</h5>
+                        <table class="table table-sm table-borderless mb-0" style="color: #ccc;">
+                            <tr><td class="text-muted" style="width: 40%;">Age</td><td>{{ prediction['age'] }} years</td></tr>
+                            <tr><td class="text-muted">Gender</td><td>{{ prediction['gender'] }}</td></tr>
+                            <tr><td class="text-muted">Weight</td><td>{{ prediction['weight'] }} kg</td></tr>
+                            <tr><td class="text-muted">Condition</td><td>{{ prediction['medical_condition'] }}</td></tr>
+                            <tr><td class="text-muted">Allergies</td><td>{{ prediction['allergy_history'] }}</td></tr>
+                            <tr><td class="text-muted">Previous ADR</td><td>{{ prediction['previous_adr'] }}</td></tr>
+                            <tr><td class="text-muted">BP</td><td>{{ prediction['systolic_bp'] }}/{{ prediction['diastolic_bp'] }} mmHg</td></tr>
+                            <tr><td class="text-muted">Blood Sugar</td><td>{{ prediction['blood_sugar'] }} mg/dL</td></tr>
+                            <tr><td class="text-muted">Creatinine</td><td>{{ prediction['creatinine'] }} mg/dL</td></tr>
+                            <tr><td class="text-muted">ALT</td><td>{{ prediction['alt_enzyme'] }} U/L</td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Drug Information -->
+            {% if prediction['uses'] %}
+            <div class="card-glass p-4 mt-4 animate-in" style="animation-delay: 0.2s;">
+                <h5 class="fw-bold mb-3" style="color: var(--pr-secondary);"><i class="bi bi-file-medical me-2"></i>Drug Safety Information — {{ prediction['drug_name'] }}</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold small" style="color: var(--pr-primary-light);">Uses</h6>
+                        <p class="small text-muted">{{ prediction['uses'] }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold small" style="color: var(--pr-primary-light);">Common Side Effects</h6>
+                        <p class="small text-muted">{{ prediction['common_side_effects'] }}</p>
+                    </div>
+                    {% if prediction['serious_warnings'] %}
+                    <div class="col-12">
+                        <h6 class="fw-bold small" style="color: var(--pr-danger);">⚠ Serious Warnings</h6>
+                        <p class="small text-muted">{{ prediction['serious_warnings'] }}</p>
+                    </div>
+                    {% endif %}
+                    {% if prediction['contraindications'] %}
+                    <div class="col-md-6">
+                        <h6 class="fw-bold small" style="color: var(--pr-warning);">Contraindications</h6>
+                        <p class="small text-muted">{{ prediction['contraindications'] }}</p>
+                    </div>
+                    {% endif %}
+                    {% if prediction['interactions'] %}
+                    <div class="col-md-6">
+                        <h6 class="fw-bold small" style="color: var(--pr-warning);">Drug Interactions</h6>
+                        <p class="small text-muted">{{ prediction['interactions'] }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Actions -->
+            <div class="text-center mt-4 animate-in" style="animation-delay: 0.3s;">
+                <a href="{{ url_for('patient') }}" class="btn btn-primary-gradient me-2">
+                    <i class="bi bi-arrow-repeat me-1"></i>New Prediction
+                </a>
+                <a href="{{ url_for('drug_info', drug_id=prediction['drug_id']) }}" class="btn btn-outline-glass me-2">
+                    <i class="bi bi-book me-1"></i>Full Drug Monograph
+                </a>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-glass">
+                    <i class="bi bi-graph-up me-1"></i>Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

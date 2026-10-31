@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}Patient Clinical Details — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <h1 class="section-title animate-in"><i class="bi bi-person-badge me-2"></i>Patient Clinical Parameters</h1>
+            <p class="section-subtitle animate-in">Enter the patient's demographics, medical history, and current lab values for risk assessment.</p>
+            
+            <!-- Step Progress Indicator -->
+            <div class="step-progress animate-in">
+                <div class="step-item">
+                    <div class="step-circle active">1</div>
+                    <span class="step-label active">Patient Details</span>
+                </div>
+                <div class="step-connector pending"></div>
+                <div class="step-item">
+                    <div class="step-circle upcoming">2</div>
+                    <span class="step-label">Drug Selection</span>
+                </div>
+                <div class="step-connector pending"></div>
+                <div class="step-item">
+                    <div class="step-circle upcoming">3</div>
+                    <span class="step-label">Risk Report</span>
+                </div>
+            </div>
+            
+            <form method="POST" action="{{ url_for('patient') }}">
+                <div class="card-glass p-4 mb-4 animate-in">
+                    <h5 class="fw-bold mb-3" style="color: var(--pr-primary-light);"><i class="bi bi-person me-2"></i>Demographics</h5>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Age (years)</label>
+                            <input type="number" class="form-control" name="age" value="{{ patient.get('age', '') if patient else '' }}" min="1" max="120" required placeholder="e.g. 45">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Gender</label>
+                            <select class="form-select" name="gender">
+                                <option value="Male" {{ 'selected' if patient and patient.get('gender') == 'Male' }}>Male</option>
+                                <option value="Female" {{ 'selected' if patient and patient.get('gender') == 'Female' }}>Female</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Weight (kg)</label>
+                            <input type="number" step="0.1" class="form-control" name="weight" value="{{ patient.get('weight', '') if patient else '' }}" min="15" max="300" required placeholder="e.g. 72.5">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-glass p-4 mb-4 animate-in" style="animation-delay: 0.1s;">
+                    <h5 class="fw-bold mb-3" style="color: var(--pr-primary-light);"><i class="bi bi-clipboard2-pulse me-2"></i>Medical History</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label d-flex justify-content-between">
+                                <span>Medical Condition</span>
+                                <span class="badge" style="background: var(--pr-bg-elevated); color: var(--pr-secondary);">{{ conditions|length if conditions else 179 }} options</span>
+                            </label>
+                            <div class="input-group input-group-sm mb-1">
+                                <span class="input-group-text bg-dark border-secondary"><i class="bi bi-search text-muted"></i></span>
+                                <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" id="condSearchInput" placeholder="Quick search condition (e.g. Asthma, Diabetes, GERD)..." autocomplete="off">
+                            </div>
+                            <select class="form-select" name="medical_condition" id="condSelect">
+                                {% for cond in conditions %}
+                                <option value="{{ cond }}" {{ 'selected' if patient and patient.get('medical_condition') == cond }}>{{ cond }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label d-flex justify-content-between">
+                                <span>Allergy History</span>
+                                <span class="badge" style="background: var(--pr-bg-elevated); color: var(--pr-secondary);">{{ allergies|length if allergies else 8 }} options</span>
+                            </label>
+                            <div class="input-group input-group-sm mb-1">
+                                <span class="input-group-text bg-dark border-secondary"><i class="bi bi-search text-muted"></i></span>
+                                <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" id="allergySearchInput" placeholder="Search allergy (e.g. Penicillin, NSAIDs, Opioids)..." autocomplete="off">
+                            </div>
+                            <select class="form-select" name="allergy_history" id="allergySelect">
+                                {% for allergy in allergies %}
+                                <option value="{{ allergy }}" {{ 'selected' if patient and patient.get('allergy_history') == allergy }}>{{ allergy }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Previous Adverse Drug Reaction (ADR)</label>
+                            <select class="form-select" name="previous_adr">
+                                <option value="No" {{ 'selected' if patient and patient.get('previous_adr') == 'No' }}>No</option>
+                                <option value="Yes" {{ 'selected' if patient and patient.get('previous_adr') == 'Yes' }}>Yes</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label d-flex justify-content-between">
+                                <span>Current Medications</span>
+                                <span class="badge" style="background: var(--pr-bg-elevated); color: var(--pr-secondary);">{{ medications|length if medications else 9 }} options</span>
+                            </label>
+                            <div class="input-group input-group-sm mb-1">
+                                <span class="input-group-text bg-dark border-secondary"><i class="bi bi-search text-muted"></i></span>
+                                <input type="text" class="form-control form-control-sm bg-dark text-light border-secondary" id="medSearchInput" placeholder="Search medication (e.g. Metformin, Statins, Beta-Blockers)..." autocomplete="off">
+                            </div>
+                            <select class="form-select" name="current_medication" id="medSelect">
+                                {% for med in medications %}
+                                <option value="{{ med }}" {{ 'selected' if patient and patient.get('current_medication') == med }}>{{ med }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-glass p-4 mb-4 animate-in" style="animation-delay: 0.2s;">
+                    <h5 class="fw-bold mb-3" style="color: var(--pr-primary-light);"><i class="bi bi-activity me-2"></i>Vital Signs & Lab Values</h5>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Systolic BP (mmHg)</label>
+                            <input type="number" class="form-control" name="systolic_bp" value="{{ patient.get('systolic_bp', 120) if patient else 120 }}" min="60" max="260" required>
+                            <div class="lab-helper"><i class="bi bi-info-circle-fill"></i>Normal: <span class="normal-range">90–120</span> mmHg</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Diastolic BP (mmHg)</label>
+                            <input type="number" class="form-control" name="diastolic_bp" value="{{ patient.get('diastolic_bp', 80) if patient else 80 }}" min="40" max="160" required>
+                            <div class="lab-helper"><i class="bi bi-info-circle-fill"></i>Normal: <span class="normal-range">60–80</span> mmHg</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Blood Sugar (mg/dL)</label>
+                            <input type="number" step="0.1" class="form-control" name="blood_sugar" value="{{ patient.get('blood_sugar', 100.0) if patient else 100.0 }}" min="40" max="600" required>
+                            <div class="lab-helper"><i class="bi bi-info-circle-fill"></i>Fasting: <span class="normal-range">70–100</span> mg/dL</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Creatinine (mg/dL)</label>
+                            <input type="number" step="0.01" class="form-control" name="creatinine" value="{{ patient.get('creatinine', 1.0) if patient else 1.0 }}" min="0.1" max="15" required>
+                            <div class="lab-helper"><i class="bi bi-info-circle-fill"></i>Normal: <span class="normal-range">0.6–1.2</span> mg/dL</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">ALT Enzyme (U/L)</label>
+                            <input type="number" step="0.1" class="form-control" name="alt_enzyme" value="{{ patient.get('alt_enzyme', 25.0) if patient else 25.0 }}" min="1" max="500" required>
+                            <div class="lab-helper"><i class="bi bi-info-circle-fill"></i>Normal: <span class="normal-range">7–56</span> U/L</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center animate-in" style="animation-delay: 0.3s;">
+                    <button type="submit" class="btn btn-primary-gradient btn-lg px-5">
+                        <i class="bi bi-arrow-right-circle me-2"></i>Proceed to Drug Selection
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Reusable search filter for select dropdowns
+    function initSearchFilter(searchInputId, selectId) {
+        const searchInput = document.getElementById(searchInputId);
+        const select = document.getElementById(selectId);
+        if (!searchInput || !select) return;
+
+        const originalOptions = Array.from(select.options);
+
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            const currentVal = select.value;
+            select.innerHTML = '';
+            
+            let matchCount = 0;
+            originalOptions.forEach(opt => {
+                if (!query || opt.text.toLowerCase().includes(query) || opt.value === currentVal) {
+                    select.appendChild(opt.cloneNode(true));
+                    matchCount++;
+                }
+            });
+            
+            select.value = currentVal;
+        });
+    }
+
+    // Initialize search for all three dropdowns
+    initSearchFilter('condSearchInput', 'condSelect');
+    initSearchFilter('allergySearchInput', 'allergySelect');
+    initSearchFilter('medSearchInput', 'medSelect');
+});
+</script>
+{% endblock %}

@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Analytics Dashboard — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="section-title animate-in"><i class="bi bi-graph-up me-2"></i>Clinical Safety Dashboard</h1>
+    <p class="section-subtitle animate-in">Medication risk distribution, adverse reaction surveillance, and clinical safety trends</p>
+    
+    <!-- Stats Row -->
+    <div class="row g-4 mb-5">
+        <div class="col-6 col-md-3">
+            <div class="card-glass stat-card animate-in">
+                <div class="stat-value">{{ total_preds }}</div>
+                <div class="stat-label">Total Predictions</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card-glass stat-card animate-in" style="animation-delay: 0.05s;">
+                <div class="stat-value" style="background: linear-gradient(135deg, var(--pr-success), #55efc4); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{{ low_preds }}</div>
+                <div class="stat-label">Low Risk</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card-glass stat-card animate-in" style="animation-delay: 0.1s;">
+                <div class="stat-value" style="background: linear-gradient(135deg, var(--pr-warning), #ffeaa7); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{{ mod_preds }}</div>
+                <div class="stat-label">Moderate Risk</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card-glass stat-card animate-in" style="animation-delay: 0.15s;">
+                <div class="stat-value" style="background: linear-gradient(135deg, var(--pr-danger), #fab1a0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{{ high_preds }}</div>
+                <div class="stat-label">High Risk</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4 mb-5">
+        <!-- Risk Distribution Chart -->
+        <div class="col-md-5">
+            <div class="card-glass p-4 h-100 animate-in" style="animation-delay: 0.2s;">
+                <h5 class="fw-bold mb-3" style="color: var(--pr-primary-light);"><i class="bi bi-pie-chart me-2"></i>Risk Distribution</h5>
+                <canvas id="riskChart" height="250"></canvas>
+            </div>
+        </div>
+        
+        <!-- Top Drugs -->
+        <div class="col-md-7">
+            <div class="card-glass p-4 h-100 animate-in" style="animation-delay: 0.25s;">
+                <h5 class="fw-bold mb-3" style="color: var(--pr-primary-light);"><i class="bi bi-bar-chart me-2"></i>Most Predicted Drugs</h5>
+                {% if top_drugs %}
+                <table class="table table-sm table-dark-custom">
+                    <thead><tr><th>Drug</th><th class="text-end">Predictions</th></tr></thead>
+                    <tbody>
+                        {% for drug in top_drugs %}
+                        <tr>
+                            <td>{{ drug['drug_name'] }}</td>
+                            <td class="text-end">
+                                <span class="badge" style="background: var(--pr-primary); padding: 0.3rem 0.6rem;">{{ drug['count'] }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="text-muted small">No predictions recorded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Clinical Risk Stratification & Monitoring Guidelines -->
+    <div class="card-glass p-4 mb-5 animate-in" style="animation-delay: 0.3s;">
+        <h5 class="fw-bold mb-3" style="color: var(--pr-secondary);"><i class="bi bi-shield-check me-2"></i>Clinical Risk Stratification & Monitoring Reference</h5>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="p-3 h-100" style="background: rgba(0, 184, 148, 0.08); border: 1px solid rgba(0, 184, 148, 0.25); border-radius: 12px;">
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="risk-badge risk-low me-2"><i class="bi bi-check-circle me-1"></i>Low Risk</span>
+                        <strong class="text-success small">Standard Care</strong>
+                    </div>
+                    <p class="small text-muted mb-0">Biomarkers and clinical parameters remain within standard physiological limits. Standard dosage titration and routine clinical reviews are typically indicated.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 h-100" style="background: rgba(253, 203, 110, 0.08); border: 1px solid rgba(253, 203, 110, 0.25); border-radius: 12px;">
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="risk-badge risk-moderate me-2"><i class="bi bi-exclamation-circle me-1"></i>Moderate Risk</span>
+                        <strong class="text-warning small">Enhanced Surveillance</strong>
+                    </div>
+                    <p class="small text-muted mb-0">Borderline vitals, renal/hepatic strain, or potential drug-drug interactions detected. Prudent dosage scheduling and close therapeutic monitoring recommended.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 h-100" style="background: rgba(231, 76, 60, 0.08); border: 1px solid rgba(231, 76, 60, 0.25); border-radius: 12px;">
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="risk-badge risk-high me-2"><i class="bi bi-exclamation-triangle me-1"></i>High Risk</span>
+                        <strong class="text-danger small">Critical Precaution</strong>
+                    </div>
+                    <p class="small text-muted mb-0">Heightened likelihood of adverse drug reaction (ADR) due to prior reaction history, organ impairment, or critical contraindications. Immediate clinician review advised.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Prediction History (no patient data) -->
+    <div class="card-glass p-4 animate-in" style="animation-delay: 0.35s;">
+        <h5 class="fw-bold mb-3" style="color: var(--pr-primary-light);"><i class="bi bi-clock-history me-2"></i>Recent Predictions</h5>
+        {% if recent_history %}
+        <div class="table-responsive">
+            <table class="table table-sm table-dark-custom">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Drug</th>
+                        <th>Dosage</th>
+                        <th>Risk Level</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in recent_history %}
+                    <tr>
+                        <td class="text-muted">{{ row['id'] }}</td>
+                        <td>{{ row['drug_name'] }}</td>
+                        <td class="small text-muted">{{ row['dosage_category'] }}</td>
+                        <td>
+                            <span class="risk-badge risk-{{ row['predicted_risk']|lower }}">{{ row['predicted_risk'] }}</span>
+                        </td>
+                        <td class="small text-muted">{{ row['created_at'][:16] if row['created_at'] else '—' }}</td>
+                        <td>
+                            <a href="{{ url_for('view_prediction', pred_id=row['id']) }}" class="btn btn-outline-glass btn-sm"><i class="bi bi-eye"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted small">No predictions recorded yet. <a href="{{ url_for('patient') }}">Make your first prediction →</a></p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+const ctx = document.getElementById('riskChart');
+if (ctx) {
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Low Risk', 'Moderate Risk', 'High Risk'],
+            datasets: [{
+                data: [{{ low_preds }}, {{ mod_preds }}, {{ high_preds }}],
+                backgroundColor: ['#10b981', '#f59e0b', '#f43f5e'],
+                borderColor: ['rgba(16,185,129,0.4)', 'rgba(245,158,11,0.4)', 'rgba(244,63,94,0.4)'],
+                borderWidth: 2,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: '#cbd5e1', font: { family: 'Inter', size: 12 }, padding: 15 }
+                }
+            },
+            cutout: '60%'
+        }
+    });
+}
+</script>
+{% endblock %}

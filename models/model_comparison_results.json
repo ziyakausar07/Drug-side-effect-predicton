@@ -1,0 +1,17 @@
+{
+  "XGBoost": {
+    "accuracy": 96.55,
+    "cv_mean": 95.95,
+    "cv_std": 0.33
+  },
+  "Random Forest": {
+    "accuracy": 87.9,
+    "cv_mean": 87.73,
+    "cv_std": 0.62
+  },
+  "Logistic Regression": {
+    "accuracy": 70.3,
+    "cv_mean": 69.9,
+    "cv_std": 1.2
+  }
+}

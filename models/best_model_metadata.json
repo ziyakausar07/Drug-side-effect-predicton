@@ -1,0 +1,15 @@
+{
+  "best_model": "XGBoost",
+  "accuracy": 96.55,
+  "cv_mean": 95.95,
+  "cv_std": 0.33,
+  "version": "2.0-comprehensive",
+  "features_count": 15,
+  "training_samples": 8000,
+  "test_samples": 2000,
+  "target_classes": [
+    "High",
+    "Low",
+    "Moderate"
+  ]
+}

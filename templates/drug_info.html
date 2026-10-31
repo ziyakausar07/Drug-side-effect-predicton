@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}{{ drug['drug_name'] }} — Drug Monograph — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="d-flex align-items-center mb-4 animate-in">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-glass btn-sm me-3"><i class="bi bi-arrow-left"></i></a>
+                <div>
+                    <h1 class="section-title mb-0">{{ drug['drug_name'] }}</h1>
+                    <p class="text-muted mb-0">{{ drug['generic_name'] }}</p>
+                </div>
+                <span class="badge ms-auto" style="background: var(--pr-bg-elevated); color: var(--pr-secondary); font-size: 0.85rem; padding: 0.5rem 1rem; border-radius: 10px;">{{ drug['category'] }}</span>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card-glass p-4 h-100 animate-in">
+                        <h5 class="fw-bold mb-3" style="color: var(--pr-primary-light);"><i class="bi bi-clipboard-check me-2"></i>Therapeutic Uses</h5>
+                        <p class="small">{{ drug['uses'] }}</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card-glass p-4 h-100 animate-in" style="animation-delay: 0.05s;">
+                        <h5 class="fw-bold mb-3" style="color: var(--pr-warning);"><i class="bi bi-thermometer-half me-2"></i>Common Side Effects</h5>
+                        <p class="small">{{ drug['common_side_effects'] }}</p>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="card-glass p-4 animate-in" style="animation-delay: 0.1s; border-left: 3px solid var(--pr-danger);">
+                        <h5 class="fw-bold mb-3" style="color: var(--pr-danger);"><i class="bi bi-exclamation-triangle me-2"></i>Serious Warnings</h5>
+                        <p class="small">{{ drug['serious_warnings'] }}</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card-glass p-4 h-100 animate-in" style="animation-delay: 0.15s;">
+                        <h5 class="fw-bold mb-3" style="color: var(--pr-accent);"><i class="bi bi-slash-circle me-2"></i>Contraindications</h5>
+                        <p class="small">{{ drug['contraindications'] }}</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card-glass p-4 h-100 animate-in" style="animation-delay: 0.2s;">
+                        <h5 class="fw-bold mb-3" style="color: var(--pr-secondary);"><i class="bi bi-arrow-left-right me-2"></i>Drug Interactions</h5>
+                        <p class="small">{{ drug['interactions'] }}</p>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="card-glass p-4 animate-in" style="animation-delay: 0.25s;">
+                        <h5 class="fw-bold mb-3" style="color: var(--pr-primary-light);"><i class="bi bi-shield-check me-2"></i>Precautions</h5>
+                        <p class="small">{{ drug['precautions'] }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            {% if drug['source_reference'] %}
+            <div class="text-muted small mt-4 animate-in" style="animation-delay: 0.3s;">
+                <i class="bi bi-journal-text me-1"></i> <strong>Source:</strong> {{ drug['source_reference'] }}
+            </div>
+            {% endif %}
+            
+            <div class="text-center mt-4 animate-in" style="animation-delay: 0.35s;">
+                <a href="{{ url_for('patient') }}" class="btn btn-primary-gradient">
+                    <i class="bi bi-cpu me-2"></i>Predict Side Effect Risk for This Drug
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

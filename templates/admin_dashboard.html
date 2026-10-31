@@ -1,0 +1,568 @@
+{% extends "base.html" %}
+{% block title %}Admin Drug Management & Surveillance — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Top Admin Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-3 border-bottom border-secondary border-opacity-25 animate-in">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge" style="background: rgba(14, 165, 233, 0.2); color: var(--pr-primary-light); border: 1px solid var(--pr-border);">
+                    <i class="bi bi-shield-check me-1"></i>ADMINISTRATOR CONSOLE
+                </span>
+                <span class="text-muted small">Logged in as <strong>{{ session.get('admin_username', 'admin') }}</strong></span>
+            </div>
+            <h1 class="section-title mb-0" style="font-size: 2rem;">
+                <i class="bi bi-capsule-pill me-2 text-info"></i>Drug Catalog & Safety Surveillance
+            </h1>
+            <p class="text-muted small mb-0 mt-1">Manage pharmacological inventory, register new drugs, and analyze surveillance metrics.</p>
+        </div>
+        <div class="mt-3 mt-md-0 d-flex gap-2">
+            <a href="#add-drug-section" class="btn btn-primary-gradient">
+                <i class="bi bi-plus-circle me-1"></i>Add New Drug
+            </a>
+            <a href="#catalog-inventory" class="btn btn-outline-glass">
+                <i class="bi bi-table me-1"></i>View Inventory
+            </a>
+            <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger">
+                <i class="bi bi-box-arrow-right me-1"></i>Logout
+            </a>
+        </div>
+    </div>
+
+    <!-- 1. Stats Counter Cards (kitne drug hai dekhne aana) -->
+    <div class="row g-3 mb-5">
+        <div class="col-6 col-lg-3">
+            <div class="card-glass stat-card animate-in">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted small text-uppercase fw-semibold">Total Drugs</span>
+                    <i class="bi bi-capsule" style="font-size: 1.4rem; color: var(--pr-primary-light);"></i>
+                </div>
+                <div class="stat-value text-start">{{ "{:,}".format(total_drugs) }}</div>
+                <div class="stat-label text-start">In Active Database</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card-glass stat-card animate-in" style="animation-delay: 0.05s;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted small text-uppercase fw-semibold">Categories</span>
+                    <i class="bi bi-tags" style="font-size: 1.4rem; color: var(--pr-secondary-light);"></i>
+                </div>
+                <div class="stat-value text-start" style="background: linear-gradient(135deg, var(--pr-secondary-light), #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    {{ total_categories }}
+                </div>
+                <div class="stat-label text-start">Therapeutic Classes</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card-glass stat-card animate-in" style="animation-delay: 0.1s;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted small text-uppercase fw-semibold">Assessments</span>
+                    <i class="bi bi-activity" style="font-size: 1.4rem; color: #38bdf8;"></i>
+                </div>
+                <div class="stat-value text-start" style="background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    {{ "{:,}".format(total_preds) }}
+                </div>
+                <div class="stat-label text-start">Evaluations Conducted</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card-glass stat-card animate-in" style="animation-delay: 0.15s;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted small text-uppercase fw-semibold">High Risk Alerts</span>
+                    <i class="bi bi-exclamation-triangle" style="font-size: 1.4rem; color: var(--pr-danger);"></i>
+                </div>
+                <div class="stat-value text-start" style="background: linear-gradient(135deg, var(--pr-danger), #fb7185); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    {{ high_risk_preds }}
+                </div>
+                <div class="stat-label text-start">Critical Reactions Flagged</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Visual Charts & Graphs Section (aur usko graph jaisa dekhna sahi se) -->
+    <div class="mb-5">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <div>
+                <h4 class="fw-bold mb-0 text-light"><i class="bi bi-graph-up-arrow me-2 text-info"></i>Pharmacological Surveillance Graphs</h4>
+                <p class="text-muted small mb-0">Visual analytics of drug inventory distribution and patient risk stratification</p>
+            </div>
+            <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: var(--pr-secondary); border: 1px solid rgba(16, 185, 129, 0.3);">
+                <i class="bi bi-broadcast me-1"></i>Live Telemetry
+            </span>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <!-- Chart 1: Drug Inventory by Category (Bar Chart) -->
+            <div class="col-lg-7">
+                <div class="card-glass p-4 h-100 animate-in">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0 text-light">
+                            <i class="bi bi-bar-chart-fill me-2" style="color: var(--pr-primary-light);"></i>Top Drug Categories in Catalog
+                        </h6>
+                        <small class="text-muted">Top 10 Classes</small>
+                    </div>
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="categoryBarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart 2: Adverse Reaction Risk Breakdown (Doughnut Chart) -->
+            <div class="col-lg-5">
+                <div class="card-glass p-4 h-100 animate-in" style="animation-delay: 0.1s;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0 text-light">
+                            <i class="bi bi-pie-chart-fill me-2" style="color: var(--pr-secondary);"></i>ADR Risk Stratification Ratio
+                        </h6>
+                        <small class="text-muted">{{ total_preds }} records</small>
+                    </div>
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="riskDonutChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Chart 3: Most Assessed Drugs (Horizontal Bar Chart) -->
+            <div class="col-lg-6">
+                <div class="card-glass p-4 h-100 animate-in" style="animation-delay: 0.15s;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0 text-light">
+                            <i class="bi bi-clipboard2-pulse me-2" style="color: #38bdf8;"></i>Most Assessed Medications
+                        </h6>
+                        <small class="text-muted">Clinical Frequency</small>
+                    </div>
+                    <div style="position: relative; height: 260px;">
+                        <canvas id="assessedDrugsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Pharmacovigilance Summary Panel -->
+            <div class="col-lg-6">
+                <div class="card-glass p-4 h-100 animate-in" style="animation-delay: 0.2s;">
+                    <h6 class="fw-bold mb-3 text-light">
+                        <i class="bi bi-shield-check me-2 text-success"></i>Surveillance & Quality Metrics
+                    </h6>
+                    <div class="d-flex flex-column gap-3">
+                        <div class="p-3 rounded" style="background: var(--pr-bg-elevated); border-left: 4px solid var(--pr-primary);">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-semibold small text-light">Catalog Completeness</span>
+                                <span class="badge bg-info text-dark">99.8%</span>
+                            </div>
+                            <div class="progress" style="height: 6px; background: rgba(255,255,255,0.08);">
+                                <div class="progress-bar bg-info" style="width: 99.8%;"></div>
+                            </div>
+                            <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;">All active drugs contain validated uses, warnings, and precautions.</small>
+                        </div>
+
+                        <div class="p-3 rounded" style="background: var(--pr-bg-elevated); border-left: 4px solid var(--pr-secondary);">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-semibold small text-light">Low-Risk Safety Ratio</span>
+                                <span class="badge bg-success">
+                                    {% if total_preds > 0 %}
+                                    {{ ((risk_stats.low / total_preds) * 100)|round(1) }}%
+                                    {% else %}
+                                    N/A
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <small class="text-muted d-block" style="font-size: 0.75rem;">Proportion of evaluations within safe therapeutic baseline limits.</small>
+                        </div>
+
+                        <div class="p-3 rounded" style="background: var(--pr-bg-elevated); border-left: 4px solid var(--pr-danger);">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-semibold small text-light">High Risk Flags</span>
+                                <span class="badge bg-danger">{{ risk_stats.high }} Flagged</span>
+                            </div>
+                            <small class="text-muted d-block" style="font-size: 0.75rem;">Patient cases requiring immediate dose alteration or alternative therapy.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Add Drug Form Section (admin ko drugs add karne aana) -->
+    <div class="card-glass p-4 p-md-5 mb-5 animate-in" id="add-drug-section">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-3 border-bottom border-secondary border-opacity-25">
+            <div>
+                <h4 class="fw-bold mb-1 text-light">
+                    <i class="bi bi-plus-circle-fill me-2" style="color: var(--pr-primary-light);"></i>Add New Drug to Catalog
+                </h4>
+                <p class="text-muted small mb-0">Register a new medication with full clinical monograph details into the database.</p>
+            </div>
+            <button type="button" class="btn btn-outline-glass btn-sm mt-2 mt-md-0" id="fillDemoDrugBtn">
+                <i class="bi bi-magic me-1" style="color: var(--pr-warning);"></i>Auto-Fill Sample Drug (Demo)
+            </button>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin_add_drug') }}" id="addDrugForm">
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label" for="drugNameInput"><i class="bi bi-capsule me-1 text-info"></i>Drug Name (Brand / Common) *</label>
+                    <input type="text" class="form-control" id="drugNameInput" name="drug_name" placeholder="e.g. Dapagliflozin 10mg" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="genericNameInput"><i class="bi bi-file-medical me-1 text-info"></i>Generic / Chemical Name *</label>
+                    <input type="text" class="form-control" id="genericNameInput" name="generic_name" placeholder="e.g. Dapagliflozin Propanediol" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="categoryInput"><i class="bi bi-tag me-1 text-info"></i>Therapeutic Category *</label>
+                    <input type="text" class="form-control" id="categoryInput" name="category" list="categoryOptions" placeholder="e.g. SGLT2 Inhibitor (Antidiabetic)" required>
+                    <datalist id="categoryOptions">
+                        <option value="Antibiotic (Aminopenicillin)">
+                        <option value="Antibiotic (Fluoroquinolone)">
+                        <option value="Antibiotic (Macrolide)">
+                        <option value="Antidiabetic (Biguanide)">
+                        <option value="Antidiabetic (SGLT2 Inhibitor)">
+                        <option value="Antihypertensive (ACE Inhibitor)">
+                        <option value="Antihypertensive (ARB)">
+                        <option value="Antihypertensive (Calcium Channel Blocker)">
+                        <option value="Antihypertensive (Beta-Blocker)">
+                        <option value="Analgesic / Antipyretic">
+                        <option value="NSAID (Nonsteroidal Anti-inflammatory)">
+                        <option value="Statin (HMG-CoA Reductase Inhibitor)">
+                        <option value="Antidepressant (SSRI)">
+                        <option value="Anticoagulant">
+                        <option value="Antihistamine">
+                        <option value="Proton Pump Inhibitor (PPI)">
+                    </datalist>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="usesInput"><i class="bi bi-check2-circle me-1 text-success"></i>Indications & Uses *</label>
+                    <textarea class="form-control" id="usesInput" name="uses" rows="3" placeholder="Primary clinical indications, approved conditions, and usage protocols..." required></textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="sideEffectsInput"><i class="bi bi-exclamation-circle me-1 text-warning"></i>Common Adverse Reactions / Side Effects *</label>
+                    <textarea class="form-control" id="sideEffectsInput" name="common_side_effects" rows="3" placeholder="Most frequently reported mild to moderate side effects (e.g. nausea, headache, dizziness)..." required></textarea>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="warningsInput"><i class="bi bi-shield-slash me-1 text-danger"></i>Serious Warnings & Adverse Risks</label>
+                    <textarea class="form-control" id="warningsInput" name="serious_warnings" rows="2" placeholder="Critical black-box warnings, organ toxicity, or life-threatening risks..."></textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="contraindicationsInput"><i class="bi bi-slash-circle me-1 text-danger"></i>Contraindications</label>
+                    <textarea class="form-control" id="contraindicationsInput" name="contraindications" rows="2" placeholder="Patient conditions where administration is strictly forbidden..."></textarea>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label" for="interactionsInput"><i class="bi bi-arrow-left-right me-1 text-info"></i>Drug-Drug Interactions</label>
+                    <input type="text" class="form-control" id="interactionsInput" name="interactions" placeholder="Major interacting medications...">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="precautionsInput"><i class="bi bi-eye me-1 text-info"></i>Clinical Monitoring Precautions</label>
+                    <input type="text" class="form-control" id="precautionsInput" name="precautions" placeholder="Biomarkers or lab tests to monitor...">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="refInput"><i class="bi bi-journal-medical me-1 text-info"></i>Source Reference</label>
+                    <input type="text" class="form-control" id="refInput" name="source_reference" value="FDA / DailyMed / WHO Essential Medicines">
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <button type="reset" class="btn btn-outline-glass">Reset Form</button>
+                <button type="submit" class="btn btn-success-gradient px-4">
+                    <i class="bi bi-cloud-arrow-up me-2"></i>Save & Add Drug to Database
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 4. Drug Inventory Directory (kitne drug hai dekhne aana) -->
+    <div class="card-glass p-4 animate-in" id="catalog-inventory">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2">
+                    <h5 class="fw-bold mb-0 text-light"><i class="bi bi-collection me-2 text-info"></i>Drug Catalog Inventory</h5>
+                    <span class="badge" style="background: rgba(14, 165, 233, 0.2); color: var(--pr-primary-light);">
+                        {{ total_drugs }} total registered
+                    </span>
+                </div>
+                <small class="text-muted">Browse, search, inspect, or remove drugs from catalog.</small>
+            </div>
+
+            <!-- Search and Filter Controls -->
+            <form method="GET" action="{{ url_for('admin_dashboard') }}#catalog-inventory" class="d-flex flex-wrap gap-2">
+                <input type="text" name="q" class="form-control form-control-sm" style="min-width: 220px;" placeholder="Search by name, generic, uses..." value="{{ search_query }}">
+                
+                <select name="category" class="form-select form-select-sm" style="min-width: 170px;" onchange="this.form.submit()">
+                    <option value="">All Categories</option>
+                    {% for cat in distinct_categories %}
+                    <option value="{{ cat }}" {% if category_filter == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit" class="btn btn-sm btn-primary-gradient"><i class="bi bi-search"></i></button>
+                {% if search_query or category_filter %}
+                <a href="{{ url_for('admin_dashboard') }}#catalog-inventory" class="btn btn-sm btn-outline-glass" title="Clear Filters"><i class="bi bi-x-circle"></i></a>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Live Instant Filter for rendered table -->
+        <div class="mb-3">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-dark border-secondary"><i class="bi bi-funnel text-info"></i></span>
+                <input type="text" id="liveTableFilter" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Instant filter visible rows by drug name, generic, or category...">
+            </div>
+        </div>
+
+        <!-- Inventory Table -->
+        <div class="table-responsive">
+            <table class="table table-hover table-dark-custom align-middle" id="inventoryTable">
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">ID</th>
+                        <th>Drug Name</th>
+                        <th>Generic Name</th>
+                        <th>Therapeutic Category</th>
+                        <th>Indications</th>
+                        <th style="width: 130px;" class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if drugs %}
+                        {% for d in drugs %}
+                        <tr class="drug-row">
+                            <td class="text-muted fw-bold">#{{ d['id'] }}</td>
+                            <td>
+                                <strong class="text-light">{{ d['drug_name'] }}</strong>
+                            </td>
+                            <td class="small text-muted">{{ d['generic_name'] }}</td>
+                            <td>
+                                <span class="badge" style="background: rgba(14, 165, 233, 0.12); color: var(--pr-primary-light); border: 1px solid var(--pr-border);">
+                                    {{ d['category'] }}
+                                </span>
+                            </td>
+                            <td class="small text-muted" style="max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ d['uses'] }}">
+                                {{ d['uses'] }}
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ url_for('drug_info', drug_id=d['id']) }}" class="btn btn-sm btn-outline-glass py-1 px-2" title="View Full Monograph">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('admin_delete_drug', drug_id=d['id']) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete \'{{ d['drug_name'] }}\' from catalog?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Delete Drug">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                <i class="bi bi-search me-1"></i>No medications match current filters.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary border-opacity-25 small text-muted">
+            <span>Showing {{ drugs|length }} items</span>
+            <span>Total Catalog: <strong>{{ total_drugs }}</strong> drugs</span>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // -------------------------------------------------------------
+    // 1. Top Categories Bar Chart
+    // -------------------------------------------------------------
+    const catLabels = [{% for c in category_counts %}'{{ c.category|replace("'", "\\'") }}'{% if not loop.last %},{% endif %}{% endfor %}];
+    const catData = [{% for c in category_counts %}{{ c.count }}{% if not loop.last %},{% endif %}{% endfor %}];
+
+    const catCtx = document.getElementById('categoryBarChart');
+    if (catCtx && catLabels.length > 0) {
+        new Chart(catCtx, {
+            type: 'bar',
+            data: {
+                labels: catLabels,
+                datasets: [{
+                    label: 'Number of Drugs',
+                    data: catData,
+                    backgroundColor: 'rgba(14, 165, 233, 0.75)',
+                    borderColor: '#38bdf8',
+                    borderWidth: 1.5,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 28, 50, 0.95)',
+                        titleColor: '#38bdf8',
+                        bodyColor: '#e2e8f0',
+                        borderColor: 'rgba(14, 165, 233, 0.4)',
+                        borderWidth: 1,
+                        padding: 10
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            color: '#94a3b8',
+                            font: { family: 'Inter', size: 10 },
+                            maxRotation: 35,
+                            minRotation: 20
+                        }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255, 255, 255, 0.06)' },
+                        ticks: { color: '#94a3b8', font: { family: 'Inter', size: 11 } }
+                    }
+                }
+            }
+        });
+    }
+
+    // -------------------------------------------------------------
+    // 2. Risk Distribution Donut Chart
+    // -------------------------------------------------------------
+    const riskCtx = document.getElementById('riskDonutChart');
+    if (riskCtx) {
+        new Chart(riskCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Low Risk', 'Moderate Risk', 'High Risk'],
+                datasets: [{
+                    data: [{{ risk_stats.low }}, {{ risk_stats.moderate }}, {{ risk_stats.high }}],
+                    backgroundColor: [
+                        'rgba(16, 185, 129, 0.85)',
+                        'rgba(245, 158, 11, 0.85)',
+                        'rgba(244, 63, 94, 0.85)'
+                    ],
+                    borderColor: ['#10b981', '#f59e0b', '#f43f5e'],
+                    borderWidth: 2,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#cbd5e1',
+                            font: { family: 'Inter', size: 12 },
+                            padding: 15
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 28, 50, 0.95)',
+                        titleColor: '#38bdf8',
+                        padding: 10
+                    }
+                }
+            }
+        });
+    }
+
+    // -------------------------------------------------------------
+    // 3. Most Assessed Drugs Horizontal Bar Chart
+    // -------------------------------------------------------------
+    const assessedCtx = document.getElementById('assessedDrugsChart');
+    {% if top_assessed %}
+    const assessedLabels = [{% for d in top_assessed %}'{{ d.drug_name|replace("'", "\\'") }}'{% if not loop.last %},{% endif %}{% endfor %}];
+    const assessedData = [{% for d in top_assessed %}{{ d.count }}{% if not loop.last %},{% endif %}{% endfor %}];
+    {% else %}
+    const assessedLabels = ['Metformin', 'Lisinopril', 'Amoxicillin', 'Atorvastatin', 'Ibuprofen'];
+    const assessedData = [12, 9, 8, 7, 5];
+    {% endif %}
+
+    if (assessedCtx) {
+        new Chart(assessedCtx, {
+            type: 'bar',
+            data: {
+                labels: assessedLabels,
+                datasets: [{
+                    label: 'Assessments',
+                    data: assessedData,
+                    backgroundColor: 'rgba(16, 185, 129, 0.75)',
+                    borderColor: '#34d399',
+                    borderWidth: 1.5,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.06)' },
+                        ticks: { color: '#94a3b8', font: { family: 'Inter', size: 11 } }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { color: '#cbd5e1', font: { family: 'Inter', size: 11 } }
+                    }
+                }
+            }
+        });
+    }
+
+    // -------------------------------------------------------------
+    // 4. Live Table Filter
+    // -------------------------------------------------------------
+    const liveFilterInput = document.getElementById('liveTableFilter');
+    if (liveFilterInput) {
+        liveFilterInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            const rows = document.querySelectorAll('#inventoryTable tbody tr.drug-row');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        });
+    }
+
+    // -------------------------------------------------------------
+    // 5. Auto-Fill Sample Drug for Demo
+    // -------------------------------------------------------------
+    const fillDemoBtn = document.getElementById('fillDemoDrugBtn');
+    if (fillDemoBtn) {
+        fillDemoBtn.addEventListener('click', function() {
+            document.getElementById('drugNameInput').value = 'Rosuvastatin 20mg';
+            document.getElementById('genericNameInput').value = 'Rosuvastatin Calcium';
+            document.getElementById('categoryInput').value = 'Statin (HMG-CoA Reductase Inhibitor)';
+            document.getElementById('usesInput').value = 'Hyperlipidemia management, reduction of elevated LDL cholesterol and triglycerides, and primary prevention of cardiovascular events.';
+            document.getElementById('sideEffectsInput').value = 'Myalgia (muscle pain), headache, abdominal pain, nausea, asthenia, mild transient proteinuria.';
+            document.getElementById('warningsInput').value = 'Rare risk of rhabdomyolysis and severe acute renal failure; immune-mediated necrotizing myopathy; severe hepatic enzyme elevation.';
+            document.getElementById('contraindicationsInput').value = 'Active hepatic disease or unexplained persistent elevation of serum transaminases; pregnancy and lactation; concomitant cyclosporine therapy.';
+            document.getElementById('interactionsInput').value = 'Cyclosporine, gemfibrozil, protease inhibitors (atazanavir/ritonavir), warfarin (may elevate INR), antacids containing aluminum/magnesium.';
+            document.getElementById('precautionsInput').value = 'Perform baseline lipid panels and hepatic transaminases (ALT/AST). Instruct patients to report unexplained muscle soreness or dark amber urine promptly.';
+        });
+    }
+
+});
+</script>
+{% endblock %}

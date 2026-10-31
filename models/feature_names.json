@@ -1,0 +1,17 @@
+[
+  "Patient_Age",
+  "Gender",
+  "Weight_kg",
+  "Medical_Condition",
+  "Allergy_History",
+  "Previous_ADR",
+  "Current_Medications",
+  "Systolic_BP",
+  "Diastolic_BP",
+  "Blood_Sugar_mg_dL",
+  "Creatinine_mg_dL",
+  "ALT_Enzyme_U_L",
+  "Drug_Name",
+  "Drug_Category",
+  "Dosage_Category"
+]
